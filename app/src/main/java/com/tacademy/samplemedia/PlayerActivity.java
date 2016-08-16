@@ -1,5 +1,7 @@
 package com.tacademy.samplemedia;
 
+import android.content.Context;
+import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.Handler;
 import android.os.Looper;
@@ -7,15 +9,20 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.SeekBar;
 
 import java.io.IOException;
 
 public class PlayerActivity extends AppCompatActivity {
 
-    SeekBar musicView;
+    SeekBar musicView, volumeView;
+    CheckBox muteView;
+
     MediaPlayer mPlayer;
     PlayState pState;
+    AudioManager aManager;
 
     enum PlayState {
         IDLE,
@@ -29,6 +36,7 @@ public class PlayerActivity extends AppCompatActivity {
     }
 
     boolean isSeeking = false;
+    float currentVolume = 1.0f;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,8 +44,12 @@ public class PlayerActivity extends AppCompatActivity {
         setContentView(R.layout.activity_player);
 
         musicView = (SeekBar)findViewById(R.id.seek_music);
+        volumeView = (SeekBar)findViewById(R.id.seek_volume);
+        muteView = (CheckBox)findViewById(R.id.cbox_mute);
+
         mPlayer = MediaPlayer.create(this, R.raw.run_and_run);
         pState = PlayState.PREPARED;
+        aManager = (AudioManager)getSystemService(Context.AUDIO_SERVICE);
 
         musicView.setMax(mPlayer.getDuration());
         musicView.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
@@ -61,6 +73,42 @@ public class PlayerActivity extends AppCompatActivity {
                     mPlayer.seekTo(progress);
 
                 isSeeking = false;
+            }
+        });
+
+        int max = aManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+        int current = aManager.getStreamVolume(AudioManager.STREAM_MUSIC);
+
+        volumeView.setMax(max);
+        volumeView.setProgress(current);
+        volumeView.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                if (fromUser)
+                    aManager.setStreamVolume(AudioManager.STREAM_MUSIC, progress, 0);
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
+            }
+        });
+
+        muteView.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean isChecked) {
+                if (isChecked) {
+                    mHandler.removeCallbacks(volumeUp);
+                    mHandler.post(volumeDown);
+                } else {
+                    mHandler.removeCallbacks(volumeDown);
+                    mHandler.post(volumeUp);
+                }
             }
         });
 
@@ -149,6 +197,34 @@ public class PlayerActivity extends AppCompatActivity {
                 }
 
                 mHandler.postDelayed(this, 100);
+            }
+        }
+    };
+
+    Runnable volumeUp = new Runnable() {
+        @Override
+        public void run() {
+            if (currentVolume < 1.0f) {
+                mPlayer.setVolume(currentVolume, currentVolume);
+                currentVolume += 0.1f;
+                mHandler.postDelayed(this, 100);
+            } else {
+                currentVolume = 1.0f;
+                mPlayer.setVolume(currentVolume, currentVolume);
+            }
+        }
+    };
+
+    Runnable volumeDown = new Runnable() {
+        @Override
+        public void run() {
+            if (currentVolume > 0) {
+                mPlayer.setVolume(currentVolume, currentVolume);
+                currentVolume -= 0.1f;
+                mHandler.postDelayed(this, 100);
+            } else {
+                currentVolume = 0;
+                mPlayer.setVolume(currentVolume, currentVolume);
             }
         }
     };
