@@ -67,4 +67,14 @@
         android:layout_toRightOf="@+id/btn_stop"
         android:layout_toEndOf="@+id/btn_stop"
         android:checked="false" />
+
+    <Button
+        style="?android:attr/buttonStyleSmall"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="GET"
+        android:id="@+id/btn_get"
+        android:layout_above="@+id/seek_music"
+        android:layout_toRightOf="@+id/cbox_mute"
+        android:layout_toEndOf="@+id/cbox_mute" />
 </RelativeLayout>
