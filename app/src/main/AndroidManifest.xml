@@ -18,7 +18,11 @@
             </intent-filter>
         </activity>
         <activity android:name=".PlayerActivity" />
-        <activity android:name=".MusicListActivity"></activity>
+        <activity android:name=".MusicListActivity" />
+        <activity
+            android:name=".VideoActivity"
+            android:screenOrientation="landscape" />
+        <activity android:name=".VideoListActivity"></activity>
     </application>
 
 </manifest>
